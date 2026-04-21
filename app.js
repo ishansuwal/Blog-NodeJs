@@ -4,6 +4,8 @@ const ConnectToDatabase = require('./database')
 const Blog = require('./model/blogModel')
 const app=express()
 app.use(express.json())
+const {multer, storage}=require('./middleware/multerConfig')
+const upload=multer({storage: storage})
 
 ConnectToDatabase()
 
@@ -13,8 +15,9 @@ app.get("/", (req, res)=>{
     })
 })
 
-app.post("/blog", async(req, res)=>{
-    const {title, subtitle, description, image}=req.body
+app.post("/blog", upload.single('image'), async(req, res)=>{
+    const {title, subtitle, description}=req.body
+    const image=req.file
     //console.log(title, subtitle, description, image)
     if(!title || !subtitle ||!description ||!image){
         return res.status(400).json({
@@ -25,7 +28,7 @@ app.post("/blog", async(req, res)=>{
         title: title,
         subtitle: subtitle,
         description: description,
-        image: image
+        image: image.path
     })
         res.status(200).json({
         message:"Blog api hit successfully "
