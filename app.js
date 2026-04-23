@@ -6,6 +6,7 @@ const app=express()
 app.use(express.json())
 const {multer, storage}=require('./middleware/multerConfig')
 const upload=multer({storage: storage})
+const fs=require('fs')
 
 ConnectToDatabase()
 
@@ -37,12 +38,79 @@ app.post("/blog", upload.single('image'), async(req, res)=>{
 
 app.get("/blog", async(req,res)=>{
    const blogs=await Blog.find() //returns array
+   if(blogs.length==0){ // we cannot use !blogs to check if it is empty because this is an array
+    return res.status(404).json({
+        message:"No Blogs found"
+    })
+   }
    res.status(200).json({
     message:"Blogs fetched successfully",
     data:blogs
    })
 })
+
+app.get("/blog/:id", async(req,res)=>{
+    const id=req.params.id
+    const blog=await Blog.findById(id)
+    if(!blog){
+        return res.status(404).json({
+            message:"Blog not found"
+        })
+}
+    res.status(200).json({
+        message:"Blog fetched successfully",
+        data:blog
+    })
+})
+
+app.delete("/blog/:id", upload.single('image'), async(req,res)=>{
+    const id = req.params.id
+    const blog=await Blog.findById(id) 
+    await Blog.findByIdAndDelete(id)
+    fs.unlink(`./storage/${blog.image}`,(err)=>{
+        if(err){
+                console.log(err)
+        }
+        else{
+            console.log("File deleted successfully.")
+        }
+    })
+    res.status(200).json({
+        messsage:"Blog deleted successfully."
+    })
+})
+
+app.patch("/blog/:id", upload.single('image'), async(req,res)=>{
+    const id=req.params.id
+    const {title, subtitle, description}=req.body
+    let imageName;
+    if(req.file){
+        imageName=req.file.filename
+        const blog=await Blog.findById(id) 
+        const oldImage=blog.image
+
+        fs.unlink(`./storage/${blog.oldImage}`,(err)=>{
+            if(err){
+                console.log(err)
+            }
+            else{
+                console.log("File deleted successfully.")
+            }
+    })
+    }
+    await Blog.findByIdAndUpdate(id,{
+        title: title,
+        subtitle: subtitle,
+        description: description,
+        image: imageName
+    })
+    res.status(200).json({
+        message:"Blog updated successfully."
+    })
+})
+
 app.use(express.static('./storage'))
+
 
 app.listen(process.env.PORT, ()=>{
     console.log("NodeJs has started")
