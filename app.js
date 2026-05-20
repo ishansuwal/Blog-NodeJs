@@ -23,7 +23,14 @@ app.get("/", (req, res)=>{
 
 app.post("/blog", upload.single('image'), async(req, res)=>{
     const {title, subtitle, description}=req.body
-    const image=req.file
+    let filename
+    if(req.file){
+        filename=req.file.filename
+    }
+    else{
+        filename='https://thumbs.dreamstime.com/b/default-image-icon-vector-missing-picture-page-website-design-mobile-app-no-photo-available-236105299.jpg?w=768'
+    }
+    const image=filename
     //console.log(title, subtitle, description, image)
     if(!title || !subtitle ||!description ||!image){
         return res.status(400).json({
@@ -34,7 +41,7 @@ app.post("/blog", upload.single('image'), async(req, res)=>{
         title: title,
         subtitle: subtitle,
         description: description,
-        image: image.filename
+        image: image,
     })
         res.status(200).json({
         message:"Blog api hit successfully "
@@ -94,7 +101,7 @@ app.patch("/blog/:id", upload.single('image'), async(req,res)=>{
         const blog=await Blog.findById(id) 
         const oldImage=blog.image
 
-        fs.unlink(`./storage/${blog.oldImage}`,(err)=>{
+        fs.unlink(`./storage/${oldImage}`,(err)=>{
             if(err){
                 console.log(err)
             }
