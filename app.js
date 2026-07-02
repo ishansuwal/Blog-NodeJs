@@ -127,5 +127,3 @@ app.use(express.static('./storage'))
 app.listen(process.env.PORT, ()=>{
     console.log("NodeJs has started")
 })
-
-//mongodb+srv://ishansuwal7_db_user:<db_password>@cluster0.9zmmgud.mongodb.net/?appName=Cluster0
